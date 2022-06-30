@@ -1,0 +1,14 @@
+{
+  "name": "icse-vpc-network-acceptance-tests",
+  "version": "1.0.0",
+  "description": "Acceptance tests for IBM Cloud Solution Engineering VPC Network Template",
+  "main": "index.js",
+  "scripts": {
+    "test": "tfx ."
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "tfxjs": "^0.6.2"
+  }
+}
