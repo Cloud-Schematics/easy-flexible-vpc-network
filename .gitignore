@@ -6,3 +6,4 @@ terraform.*.*
 node_modules/
 .env
 *.x
+package-lock.json
