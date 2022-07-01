@@ -53,6 +53,8 @@ module "network_acls" {
   add_cluster_rules          = var.add_cluster_rules
   global_inbound_allow_list  = var.global_inbound_allow_list
   global_outbound_allow_list = var.global_outbound_allow_list
+  global_inbound_deny_list   = var.global_inbound_deny_list
+  global_outbound_deny_list  = var.global_outbound_deny_list
   vpcs_add_vpn_subnet        = var.vpcs_add_vpn_subnet
 }
 

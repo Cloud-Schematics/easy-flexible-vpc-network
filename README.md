@@ -15,6 +15,7 @@ Create flexible VPC networks in 1, 2, or 3 zones using Flow Logs and encrypted C
     - [Adding VPN Gateways](#adding-vpn-gateways)
 2. [Transit Gateway](#transit-gateway)
 3. [Network Access Control Lists](#network-access-control-lists)
+    - [Cluster Rules](#cluster-rules)
 4. [Cloud Services](#cloud-services)
     - [Key Management](#key-management)
         - [Using HPCS](#optional-use-an-existing-hyper-protect-crypto-services-instance-for-key-management)
@@ -118,13 +119,15 @@ transit_gateway_connections         | list(string) | List of VPC names from `var
 
 ## Network Access Control Lists
 
-A Network Access Control List is created for each subnet tier in each VPC. Allow rules for all of these network ACLs are managed by the following variables:
+A Network [Access Control List](https://cloud.ibm.com/docs/vpc?topic=vpc-using-acls) is created for each subnet tier in each VPC. Allow rules for all of these network ACLs are managed by the following variables:
 
 Name                                | Type         | Description                                                                                                                                                                                  | Sensitive | Default
 ----------------------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------------------------------
 add_cluster_rules                   | bool         | Automatically add needed ACL rules to allow each network to create and manage Openshift and IKS clusters.                                                                                    |           | true
 global_inbound_allow_list           | list(string) | List of CIDR blocks where inbound traffic will be allowed. These allow rules will be added to each network acl.                                                                              |           | [ "10.0.0.0/8", "161.26.0.0/16" ]
 global_outbound_allow_list          | list(string) | List of CIDR blocks where outbound traffic will be allowed. These allow rules will be added to each network acl.                                                                             |           | [ "0.0.0.0/0" ]
+global_inbound_deny_list            | list(string) | List of CIDR blocks where inbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules.                                |           | [ "0.0.0.0/0" ]
+global_outbound_deny_list           | list(string) | List of CIDR blocks where outbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules.                               |           | []
 
 ### Default Allow Rules
 
@@ -133,6 +136,27 @@ Name                                                     | CIDR            | Dir
 Allow all internal VPC network traffic                   | `10.0.0.0/8`    | Inbound
 Allow inbound traffic from IBM private service endpoints | `161.26.0.0/16` | Inbound
 Allow all outbound traffic                               | `0.0.0.0/0`     | Outbound
+
+### Default Deny Rules
+
+Name                                                     | CIDR            | Direction
+---------------------------------------------------------|-----------------|----------
+All not-allowed traffic                                  | `0.0.0.0/0`     | Inbound
+
+### Cluster Rules
+
+In order to make sure that clusters can be created on VPCs, by default the following rules are added to ACLs where clusters are provisioned. For more information about controlling OpenShift cluster traffic with ACLs, see the documentation [here](https://cloud.ibm.com/docs/openshift?topic=openshift-vpc-acls).
+
+Rule                                               | Action | TCP / UDP | Direction | Source        | Source Port   | Destination   | Destination Port
+---------------------------------------------------|--------|-----------|-----------|---------------|---------------|---------------|-------------------
+Create Worker Nodes                                | Allow  | Any       | inbound   | 161.26.0.0/16 | any           | 10.0.0.0/8    | any
+Communicate with Service Instances                 | Allow  | Any       | inbound   | 166.8.0.0/14  | any           | 10.0.0.0/8    | any
+Allow Incling Application Traffic                  | Allow  | TCP       | inbound   | 10.0.0.0/8    | 30000 - 32767 | 10.0.0.0/8    | any
+Expose Applications Using Load Balancer or Ingress | Allow  | TCP       | inbound   | 10.0.0.0/8    | any           | 10.0.0.0/8    | 443
+Create Worker Nodes                                | Allow  | Any       | outbound  | 10.0.0.0/8    | any           | 161.26.0.0/16 | any
+Communicate with Service Instances                 | Allow  | Any       | outbound  | 10.0.0.0/8    | any           | 166.8.0.0/14  | any
+Allow Incling Application Traffic                  | Allow  | TCP       | outbound  | 10.0.0.0/8    | any           | 10.0.0.0/8    | 30000 - 32767
+Expose Applications Using Load Balancer or Ingress | Allow  | TCP       | outbound  | 10.0.0.0/8    | 443           | 10.0.0.0/8    | any
 
 ---
 
@@ -215,7 +239,7 @@ Name                                | Type         | Description                
 ibmcloud_api_key                    | string       | The IBM Cloud platform API key needed to deploy IAM enabled resources.                                                                                                                       | true      | 
 region                              | string       | The region to which to deploy the VPC                                                                                                                                                        |           | 
 prefix                              | string       | The prefix that you would like to prepend to your resources                                                                                                                                  |           | 
-tags                                | list(string) | List of Tags for each resource created                                                                                                                                                        |           | null
+tags                                | list(string) | List of Tags for the resource created                                                                                                                                                        |           | null
 zones                               | number       | Number of zones for each VPC                                                                                                                                                                 |           | 3
 vpc_names                           | list(string) | Names for VPCs to create. A resource group will be dynamically created for each VPC.                                                                                                         |           | ["management", "workload"]
 vpc_subnet_tiers                    | list(string) | List of names for subnet tiers to add to each VPC. For each tier, a subnet will be created in each zone of each VPC. Each tier of subnet will have a unique access control list on each VPC. |           | ["vsi", "vpe"]
@@ -226,6 +250,8 @@ transit_gateway_connections         | list(string) | List of VPC names from `var
 add_cluster_rules                   | bool         | Automatically add needed ACL rules to allow each network to create and manage Openshift and IKS clusters.                                                                                    |           | true
 global_inbound_allow_list           | list(string) | List of CIDR blocks where inbound traffic will be allowed. These allow rules will be added to each network acl.                                                                              |           | [ "10.0.0.0/8", "161.26.0.0/16" ]
 global_outbound_allow_list          | list(string) | List of CIDR blocks where outbound traffic will be allowed. These allow rules will be added to each network acl.                                                                             |           | [ "0.0.0.0/0" ]
+global_inbound_deny_list            | list(string) | List of CIDR blocks where inbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules.                                |           | [ "0.0.0.0/0" ]
+global_outbound_deny_list           | list(string) | List of CIDR blocks where outbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules.                               |           | []
 existing_hs_crypto_name             | string       | OPTIONAL - Get data for an existing HPCS instance. If you want a KMS instance to be created, leave as `null`.                                                                                |           | null
 existing_hs_crypto_resource_group   | string       | OPTIONAL - Resource group name for an existing HPCS instance. Use only with `existing_hs_crypto_name`.                                                                                       |           | null
 enable_atracker                     | bool         | Enable activity tracker for this pattern.                                                                                                                                                    |           | true

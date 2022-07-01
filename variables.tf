@@ -155,6 +155,34 @@ variable "global_outbound_allow_list" {
   }
 }
 
+variable "global_inbound_deny_list" {
+  description = "List of CIDR blocks where inbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules."
+  type        = list(string)
+  default = [
+    "0.0.0.0/0"
+  ]
+
+  validation {
+    error_message = "Global inbound allow list should contain no duplicate CIDR blocks."
+    condition = length(var.global_inbound_deny_list) == 0 ? true : (
+      length(var.global_inbound_deny_list) == length(distinct(var.global_inbound_deny_list))
+    )
+  }
+}
+
+variable "global_outbound_deny_list" {
+  description = "List of CIDR blocks where outbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules."
+  type        = list(string)
+  default = []
+
+  validation {
+    error_message = "Global outbound allow list should contain no duplicate CIDR blocks."
+    condition = length(var.global_outbound_deny_list) == 0 ? true : (
+      length(var.global_outbound_deny_list) == length(distinct(var.global_outbound_deny_list))
+    )
+  }
+}
+
 ##############################################################################
 
 ##############################################################################
