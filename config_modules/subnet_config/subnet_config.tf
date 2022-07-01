@@ -118,7 +118,7 @@ locals {
             public_gateway = contains(var.vpc_subnet_tiers_add_public_gateway, "vpn")
             cidr = format(
               "10.0.%s0.0/24",
-              length(var.vpc_subnet_tiers) + 1,                # Zone Number
+              length(var.vpc_subnet_tiers) + 1, # Zone Number
             )
           } if zone == 1 && vpn_network == var.vpc_name
         ]

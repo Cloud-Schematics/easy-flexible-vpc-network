@@ -12,6 +12,14 @@ output "vpc_flow_logs_data" {
   value       = module.icse_vpc_network.vpc_flow_logs_data
 }
 
+output "vpc_network_acls" {
+  description = "List of network ACLs"
+  value = flatten([
+    for network in module.icse_vpc_network.vpc_networks :
+    network.network_acls
+  ])
+}
+
 ##############################################################################
 
 ##############################################################################

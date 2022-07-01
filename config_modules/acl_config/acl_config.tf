@@ -115,7 +115,7 @@ variable "global_inbound_deny_list" {
 variable "global_outbound_deny_list" {
   description = "List of CIDR blocks where outbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules."
   type        = list(string)
-  default = []
+  default     = []
 
   validation {
     error_message = "Global outbound allow list should contain no duplicate CIDR blocks."
