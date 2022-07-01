@@ -117,8 +117,7 @@ locals {
             acl_name       = "vpn-acl"
             public_gateway = contains(var.vpc_subnet_tiers_add_public_gateway, "vpn")
             cidr = format(
-              "10.%s0.%s0.0/24",
-              (index(var.vpc_names, var.vpc_name) * 3) + zone, # VPC number 
+              "10.0.%s0.0/24",
               length(var.vpc_subnet_tiers) + 1,                # Zone Number
             )
           } if zone == 1 && vpn_network == var.vpc_name

@@ -50,7 +50,7 @@ x = (Index of VPC Name in `var.vpc_names` * 3) + zone
 y = Index of subnet tier in `var.vpc_subnet_tiers` + 1
 ```
 
-This formatting reserves IP Ranges to allow for adding additional zones in the future by increasing `var.zones`.
+This formatting reserves IP Ranges to allow for adding additional zones in the future by increasing `var.zones` and additional subnet tiers by adding names to `var.vpc_subnet_tiers`
 
 #### Two VPCs with two subnet tiers in a single zone
 
@@ -88,7 +88,7 @@ Public gateways can be attached to subnet tiers across each VPC by using the `vp
 
 ### Adding VPN Gateways
 
-VPCs listed in the `vpcs_add_vpn_subnet` variable will have a subnet created in Zone 1 of that VPC, and a VPN Gateway created on that subnet.
+VPCs listed in the `vpcs_add_vpn_subnet` variable will have a subnet created in Zone 1 of that VPC, and a VPN Gateway created on that subnet. The CIDR block `10.0.x0.0/24` is reserved for VPN Gateways in each VPC.
 
 ---
 
