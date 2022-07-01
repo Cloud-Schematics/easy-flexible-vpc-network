@@ -19,7 +19,7 @@ output "vpc_network_acls" {
     [
       for network_acl in network.network_acls:
       merge(network_acl, {
-        shorname = replace(network_acl.name, "/${var.prefix}-|-acl/", "")
+        shortname = replace(network_acl.name, "/${var.prefix}-|-acl/", "")
       })
     ]
   ])
