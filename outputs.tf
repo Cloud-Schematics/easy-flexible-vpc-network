@@ -16,7 +16,12 @@ output "vpc_network_acls" {
   description = "List of network ACLs"
   value = flatten([
     for network in module.icse_vpc_network.vpc_networks :
-    network.network_acls
+    [
+      for network_acl in network.network_acls:
+      merge(network_acl, {
+        shorname = replace(network_acl.name, "/${var.prefix}-|-acl/", "")
+      })
+    ]
   ])
 }
 
