@@ -44,7 +44,7 @@ vpcs_add_vpn_subnet                 | list(string) | List of VPCs to add a subne
 
 ### Easily expand your architecturefrom one to three zones
 
-Dynamically increase zones by increasing the `zones` variables. Dynamic networking is configured to ensure that network addresses within this template won't overlap.
+Dynamically increase zones by increasing the `zones` variables. Networks are configured to ensure that network addresses within this template won't overlap.
 
 One Zone | Three Zones
 ---------|-------------
