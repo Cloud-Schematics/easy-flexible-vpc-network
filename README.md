@@ -2,11 +2,14 @@
 
 Create flexible VPC networks in 1, 2, or 3 zones using Flow Logs and encrypted Cloud Object Storage buckets with a minimal input template.
 
+![ICSE Landing Zone](./.docs/3-zone.png)
+
 ---
 
 ## Table of Contents
 
 1. [VPC Configuration](#vpc-configuration)
+    - [Flexible Network Expansion](#easily-expand-your-architecturefrom-one-to-three-zones)
     - [Network Subnet CIDR Configuration](#network-subnet-cidr-configuration)
     - [Adding Public Gateways](#adding-public-gateways)
     - [Adding VPN Gateways](#adding-vpn-gateways)
@@ -36,6 +39,16 @@ vpc_names                           | list(string) | Names for VPCs to create. A
 vpc_subnet_tiers                    | list(string) | List of names for subnet tiers to add to each VPC. For each tier, a subnet will be created in each zone of each VPC. Each tier of subnet will have a unique access control list on each VPC. |           | `["vsi", "vpe"]`
 vpc_subnet_tiers_add_public_gateway | list(string) | List of subnet tiers where a public gateway will be attached. Public gateways will be created in each VPC using these network tiers.                                                         |           | `["vpn"]`
 vpcs_add_vpn_subnet                 | list(string) | List of VPCs to add a subnet and VPN gateway. VPCs must be defined in `var.vpc_names`. A subnet and address prefix will be added in zone 1 for the VPN Gateway.                              |           | `["management"]`
+
+---
+
+### Easily expand your architecturefrom one to three zones
+
+Dynamically increase zones by increasing the `zones` variables. Dynamic networking is configured to ensure that network addresses within this template won't overlap.
+
+One Zone | Three Zones
+---------|-------------
+![ICSE Landing Zone](./.docs/1-zone.png) | ![ICSE Landing Zone](./.docs/3-zone.png)
 
 ---
 
