@@ -80,3 +80,29 @@ module "detailed_acl_rules" {
 }
 
 ##############################################################################
+
+##############################################################################
+# Virtual Private Endpoints
+##############################################################################
+
+module "vpe_subnets" {
+  source           = "./get_subnets"
+  for_each         = module.icse_vpc_network.vpc_networks
+  subnet_zone_list = each.value.subnet_zone_list
+  regex            = "-vpe-"
+}
+
+module "virtual_private_endpoints" {
+  source            = "github.com/Cloud-Schematics/vpe-module"
+  for_each          = toset(var.enable_virtual_private_endpoints == true ? var.vpcs_create_endpoint_gateway_on_vpe_tier : [])
+  prefix            = var.prefix
+  region            = var.region
+  vpc_name          = each.key
+  vpc_id            = module.icse_vpc_network.vpc_networks[each.key].id
+  subnet_zone_list  = module.vpe_subnets[each.key].subnets
+  resource_group_id = ibm_resource_group.resource_group[each.key].id
+  service_endpoints = "private"
+  cloud_services    = var.vpe_services
+}
+
+##############################################################################

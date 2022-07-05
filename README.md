@@ -24,9 +24,10 @@ Create flexible VPC networks in 1, 2, or 3 zones using Flow Logs and encrypted C
 5. [Logging and Monitoring](#logging-and-monitoring) 
     - [Flow Logs Collectors](#flow-logs-collectors)
     - [Atracker](#atracker)
-6. [Naming Convention](#naming-convention)
-7. [Template Variables](#template-variables)
-8. [Template Outputs](#template-outputs)
+6. [Virtual Private Endpoints](#virtual-private-endpoints)
+7. [Naming Convention](#naming-convention)
+8. [Template Variables](#template-variables)
+9. [Template Outputs](#template-outputs)
 
 ---
 
@@ -237,54 +238,85 @@ By setting the `enable_atracker` variable to `true`, an Atracker target will be 
 
 ---
 
+## Virtual Private Endpoints
+
+Set the `enable_virtual_private_enpoints` variable to `true` to enable the creation of Virtual Private Endpoints for cloud servies. This template uses the [ICSE VPE Module](github.com/Cloud-Schematics/vpe-module) to create Reserved IPs and Gateways.
+
+### Example Architecture with Enabled VPE
+
+![vpn-nw](.docs/vpe-nw.png)
+
+### VPE Varaibles
+
+Name                                     | Type         | Description                                                                                            | Sensitive | Default
+---------------------------------------- | ------------ | ------------------------------------------------------------------------------------------------------ | --------- | -------------------------------
+enable_virtual_private_endpoints         | bool         | Enable virtual private endpoints.                                                                      |           | false
+vpe_services                             | list(string) | List of VPE Services to use to create endpoint gateways.                                               |           | ["cloud-object-storage", "kms"]
+vpcs_create_endpoint_gateway_on_vpe_tier | list(string) | Create a Virtual Private Endpoint for supported services on each `vpe` tier of VPC names in this list. |           | ["management", "workload"]
+
+### VPE Failure States
+
+Configuration for this template will fail if `enable_virtual_private_endpoints` is true and `vpe` is not found in `subnet_tiers`.
+
+---
+
 ## Naming Convention
 
 Each resource created using this template has the prefix in `var.prefix` prepended to the resource service instance name.
 
-Resource Type               | Name Format
-----------------------------|---------------
-Resource Group              | `<prefix>-<vpc_name>-rg`
-Object Storage              | `<prefix>-cos-<random_suffix>`
-Object Storage Buckets      | `<prefix>-<vpc_name>-<flow-logs or atracker>-bucket-<random_suffix>`
-Key Management              | `<prefix>-kms`
-Key Management Key          | `<prefix>-bucket-key`
-Transit Gateway             | `<prefix>-transit-gateway`
-Transit Gateway Connections | `<prefix>-<vpc_name>-hub-connection`
-Public Gateways             | `<prefix>-<vpc_name>-public-gateway-zone-<zone>`
-Network ACLs                | `<prefix>-<vpc_name>-<subnet_tier_name>-acl`
-Subnets                     | `<prefix>-<vpc_name>-<subnet_tier_name>-<zone>`
-VPN Gateways                | `<prefix>-<vpc_name>-vpn-gateway`
-VPCs                        | `<prefix>-<vpc_name>-vpc`
-Flow Logs Collectors        | `<prefix>-<vpc_name>-flow-logs`
-Atracker                    | `<<prefix>-atracker`
+Resource Type                     | Name Format
+----------------------------------|---------------
+Resource Group                    | `<prefix>-<vpc_name>-rg`
+Object Storage                    | `<prefix>-cos-<random_suffix>`
+Object Storage Buckets            | `<prefix>-<vpc_name>-<flow-logs or atracker>-bucket-<random_suffix>`
+Key Management                    | `<prefix>-kms`
+Key Management Key                | `<prefix>-bucket-key`
+Transit Gateway                   | `<prefix>-transit-gateway`
+Transit Gateway Connections       | `<prefix>-<vpc_name>-hub-connection`
+Public Gateways                   | `<prefix>-<vpc_name>-public-gateway-zone-<zone>`
+Network ACLs                      | `<prefix>-<vpc_name>-<subnet_tier_name>-acl`
+Subnets                           | `<prefix>-<vpc_name>-<subnet_tier_name>-<zone>`
+VPN Gateways                      | `<prefix>-<vpc_name>-vpn-gateway`
+VPCs                              | `<prefix>-<vpc_name>-vpc`
+Flow Logs Collectors              | `<prefix>-<vpc_name>-flow-logs`
+Atracker                          | `<prefix>-atracker`
+Virtual Private Endpoint Gateways | `<prefix>-<vpc_name>-<service>-endpoint-gateway`
 
 ---
 
 ## Template Variables
 
-Name                                | Type         | Description                                                                                                                                                                                  | Sensitive | Default
------------------------------------ | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------------------------------
-ibmcloud_api_key                    | string       | The IBM Cloud platform API key needed to deploy IAM enabled resources.                                                                                                                       | true      | 
-region                              | string       | The region to which to deploy the VPC                                                                                                                                                        |           | 
-prefix                              | string       | The prefix that you would like to prepend to your resources                                                                                                                                  |           | 
-tags                                | list(string) | List of Tags for the resource created                                                                                                                                                        |           | null
-zones                               | number       | Number of zones for each VPC                                                                                                                                                                 |           | 3
-vpc_names                           | list(string) | Names for VPCs to create. A resource group will be dynamically created for each VPC.                                                                                                         |           | ["management", "workload"]
-vpc_subnet_tiers                    | list(string) | List of names for subnet tiers to add to each VPC. For each tier, a subnet will be created in each zone of each VPC. Each tier of subnet will have a unique access control list on each VPC. |           | ["vsi", "vpe"]
-vpc_subnet_tiers_add_public_gateway | list(string) | List of subnet tiers where a public gateway will be attached. Public gateways will be created in each VPC using these network tiers.                                                         |           | ["vpn"]
-vpcs_add_vpn_subnet                 | list(string) | List of VPCs to add a subnet and VPN gateway. VPCs must be defined in `var.vpc_names`. A subnet and address prefix will be added in zone 1 for the VPN Gateway.                              |           | ["management"]
-enable_transit_gateway              | bool         | Create transit gateway                                                                                                                                                                       |           | true
-transit_gateway_connections         | list(string) | List of VPC names from `var.vpc_names` to connect via a single transit gateway. To not use transit gateway, provide an empty list.                                                           |           | ["management", "workload"]
-add_cluster_rules                   | bool         | Automatically add needed ACL rules to allow each network to create and manage Openshift and IKS clusters.                                                                                    |           | true
-global_inbound_allow_list           | list(string) | List of CIDR blocks where inbound traffic will be allowed. These allow rules will be added to each network acl.                                                                              |           | [ "10.0.0.0/8", "161.26.0.0/16" ]
-global_outbound_allow_list          | list(string) | List of CIDR blocks where outbound traffic will be allowed. These allow rules will be added to each network acl.                                                                             |           | [ "0.0.0.0/0" ]
-global_inbound_deny_list            | list(string) | List of CIDR blocks where inbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules.                                |           | [ "0.0.0.0/0" ]
-global_outbound_deny_list           | list(string) | List of CIDR blocks where outbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules.                               |           | []
-existing_hs_crypto_name             | string       | OPTIONAL - Get data for an existing HPCS instance. If you want a KMS instance to be created, leave as `null`.                                                                                |           | null
-existing_hs_crypto_resource_group   | string       | OPTIONAL - Resource group name for an existing HPCS instance. Use only with `existing_hs_crypto_name`.                                                                                       |           | null
-enable_atracker                     | bool         | Enable activity tracker for this pattern.                                                                                                                                                    |           | true
-add_atracker_route                  | bool         | Add a route to the Atracker instance.                                                                                                                                                        |           | false
-cos_use_random_suffix               | bool         | Add a randomize suffix to the end of each Object Storage resource created in this module.                                                                                                    |           | true
+Name                                     | Type                                                      | Description                                                                                                                                                                                             | Sensitive | Default
+---------------------------------------- | --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------- | ---------------------------------
+ibmcloud_api_key                         | string                                                    | The IBM Cloud platform API key needed to deploy IAM enabled resources.                                                                                                                                  | true      | 
+region                                   | string                                                    | The region to which to deploy the VPC                                                                                                                                                                   |           | 
+prefix                                   | string                                                    | The prefix that you would like to prepend to your resources                                                                                                                                             |           | 
+tags                                     | list(string)                                              | List of Tags for the resource created                                                                                                                                                                   |           | null
+zones                                    | number                                                    | Number of zones for each VPC                                                                                                                                                                            |           | 3
+vpc_names                                | list(string)                                              | Names for VPCs to create. A resource group will be dynamically created for each VPC.                                                                                                                    |           | ["management", "workload"]
+vpc_subnet_tiers                         | list(string)                                              | List of names for subnet tiers to add to each VPC. For each tier, a subnet will be created in each zone of each VPC. Each tier of subnet will have a unique access control list on each VPC.            |           | ["vsi", "vpe"]
+vpc_subnet_tiers_add_public_gateway      | list(string)                                              | List of subnet tiers where a public gateway will be attached. Public gateways will be created in each VPC using these network tiers.                                                                    |           | ["vpn"]
+vpcs_add_vpn_subnet                      | list(string)                                              | List of VPCs to add a subnet and VPN gateway. VPCs must be defined in `var.vpc_names`. A subnet and address prefix will be added in zone 1 for the VPN Gateway.                                         |           | ["management"]
+enable_transit_gateway                   | bool                                                      | Create transit gateway                                                                                                                                                                                  |           | true
+transit_gateway_connections              | list(string)                                              | List of VPC names from `var.vpc_names` to connect via a single transit gateway. To not use transit gateway, provide an empty list.                                                                      |           | ["management", "workload"]
+add_cluster_rules                        | bool                                                      | Automatically add needed ACL rules to allow each network to create and manage Openshift and IKS clusters.                                                                                               |           | true
+global_inbound_allow_list                | list(string)                                              | List of CIDR blocks where inbound traffic will be allowed. These allow rules will be added to each network acl.                                                                                         |           | [ "10.0.0.0/8", "161.26.0.0/16" ]
+global_outbound_allow_list               | list(string)                                              | List of CIDR blocks where outbound traffic will be allowed. These allow rules will be added to each network acl.                                                                                        |           | [ "0.0.0.0/0" ]
+global_inbound_deny_list                 | list(string)                                              | List of CIDR blocks where inbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules.                                           |           | [ "0.0.0.0/0" ]
+global_outbound_deny_list                | list(string)                                              | List of CIDR blocks where outbound traffic will be denied. These deny rules will be added to each network acl. Deny rules will be added after all allow rules.                                          |           | []
+apply_new_rules_before_old_rules         | bool                                                      | When set to `true`, any new rules to be applied to existing Network ACLs will be added **before** existing rules and after any detailed rules that will be added. Otherwise, rules will be added after. |           | true
+deny_all_tcp_ports                       | list(number)                                              | Deny all inbound and outbound TCP traffic on each port in this list.                                                                                                                                    |           | [22, 80]
+deny_all_udp_ports                       | list(number)                                              | Deny all inbound and outbound UDP traffic on each port in this list.                                                                                                                                    |           | [22, 80]
+get_detailed_acl_rules_from_json         | bool                                                      | Decode local file `acl-rules.json` for the automated creation of Network ACL rules. If this is set to `false`, detailed_acl_rules will be used instead.                                                 |           | false
+detailed_acl_rules                       | See [variables.tf](./variables.tf#L216) for full details  | List describing network ACLs and rules to add.                                                                                                                                                          |           | []
+existing_hs_crypto_name                  | string                                                    | OPTIONAL - Get data for an existing HPCS instance. If you want a KMS instance to be created, leave as `null`.                                                                                           |           | null
+existing_hs_crypto_resource_group        | string                                                    | OPTIONAL - Resource group name for an existing HPCS instance. Use only with `existing_hs_crypto_name`.                                                                                                  |           | null
+enable_atracker                          | bool                                                      | Enable activity tracker for this pattern.                                                                                                                                                               |           | true
+add_atracker_route                       | bool                                                      | Add a route to the Atracker instance.                                                                                                                                                                   |           | false
+cos_use_random_suffix                    | bool                                                      | Add a randomize suffix to the end of each Object Storage resource created in this module.                                                                                                               |           | true
+enable_virtual_private_endpoints         | bool                                                      | Enable virtual private endpoints.                                                                                                                                                                       |           | true
+vpe_services                             | list(string)                                              | List of VPE Services to use to create endpoint gateways.                                                                                                                                                |           | ["cloud-object-storage", "kms"]
+vpcs_create_endpoint_gateway_on_vpe_tier | list(string)                                              | Create a Virtual Private Endpoint for supported services on each `vpe` tier of VPC names in this list.                                                                                                  |           | ["management", "workload"]
 
 ---
 

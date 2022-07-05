@@ -208,7 +208,7 @@ variable "deny_all_udp_ports" {
 }
 
 variable "get_detailed_acl_rules_from_json" {
-  description = "Decode local file `acl-rules.json` for the automated creation of Network ACL rules."
+  description = "Decode local file `acl-rules.json` for the automated creation of Network ACL rules. If this is set to `false`, detailed_acl_rules will be used instead."
   type        = bool
   default     = false
 }
@@ -252,21 +252,7 @@ variable "detailed_acl_rules" {
       )
     })
   )
-  default = [
-    {
-      acl_shortname = "management-vsi"
-      rules = [
-        {
-          shortname   = "allow-inbound-port-443"
-          add_first   = true
-          action      = "allow"
-          direction   = "inbound"
-          destination = "0.0.0.0/0"
-          source      = "0.0.0.0/0"
-        }
-      ]
-    }
-  ]
+  default = []
 }
 
 ##############################################################################
@@ -315,6 +301,30 @@ variable "cos_use_random_suffix" {
   description = "Add a randomize suffix to the end of each Object Storage resource created in this module."
   type        = bool
   default     = true
+}
+
+##############################################################################
+
+##############################################################################
+# Virtual Private Endpoint Variables
+##############################################################################
+
+variable "enable_virtual_private_endpoints" {
+  description = "Enable virtual private endpoints."
+  type        = bool
+  default     = false
+}
+
+variable "vpe_services" {
+  description = "List of VPE Services to use to create endpoint gateways."
+  type        = list(string)
+  default     = ["cloud-object-storage", "kms"]
+}
+
+variable "vpcs_create_endpoint_gateway_on_vpe_tier" {
+  description = "Create a Virtual Private Endpoint for supported services on each `vpe` tier of VPC names in this list."
+  type        = list(string)
+  default     = ["management", "workload"]
 }
 
 ##############################################################################
