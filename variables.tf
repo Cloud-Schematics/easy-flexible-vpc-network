@@ -207,7 +207,6 @@ variable "deny_all_udp_ports" {
   default     = [22, 80]
 }
 
-
 variable "get_detailed_acl_rules_from_json" {
   description = "Decode local file `acl-rules.json` for the automated creation of Network ACL rules."
   type        = bool
