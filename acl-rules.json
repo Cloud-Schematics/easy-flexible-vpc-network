@@ -1,0 +1,13 @@
+[
+    {
+        "acl_shortname" : "management-vsi",
+        "rules": [
+            {
+                "shortname" : "allow-inbound-port-443",
+                "add_first" : true,
+                "action" : "allow",
+                "direction" : "inbound"
+            }
+        ]
+    }
+]

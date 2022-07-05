@@ -186,6 +186,93 @@ variable "global_outbound_deny_list" {
 ##############################################################################
 
 ##############################################################################
+# (Optional) Detailed Network ACL Variables
+##############################################################################
+
+variable "apply_new_rules_before_old_rules" {
+  description = "When set to `true`, any new rules to be applied to existing Network ACLs will be added **before** existing rules and after any detailed rules that will be added. Otherwise, rules will be added after."
+  type        = bool
+  default     = true
+}
+
+variable "deny_all_tcp_ports" {
+  description = "Deny all inbound and outbound TCP traffic on each port in this list."
+  type        = list(number)
+  default     = [22, 80]
+}
+
+variable "deny_all_udp_ports" {
+  description = "Deny all inbound and outbound UDP traffic on each port in this list."
+  type        = list(number)
+  default     = [22, 80]
+}
+
+
+variable "get_detailed_acl_rules_from_json" {
+  description = "Decode local file `acl-rules.json` for the automated creation of Network ACL rules."
+  type        = bool
+  default     = false
+}
+
+variable "detailed_acl_rules" {
+  description = "List describing network ACLs and rules to add."
+  type = list(
+    object({
+      acl_shortname = string
+      rules = list(
+        object({
+          shortname   = string
+          action      = string
+          direction   = string
+          add_first   = optional(bool)
+          destination = optional(string)
+          source      = optional(string)
+          tcp = optional(
+            object({
+              port_max        = optional(number)
+              port_min        = optional(number)
+              source_port_max = optional(number)
+              source_port_min = optional(number)
+            })
+          )
+          udp = optional(
+            object({
+              port_max        = optional(number)
+              port_min        = optional(number)
+              source_port_max = optional(number)
+              source_port_min = optional(number)
+            })
+          )
+          icmp = optional(
+            object({
+              type = optional(number)
+              code = optional(number)
+            })
+          )
+        })
+      )
+    })
+  )
+  default = [
+    {
+      acl_shortname = "management-vsi"
+      rules = [
+        {
+          shortname   = "allow-inbound-port-443"
+          add_first   = true
+          action      = "allow"
+          direction   = "inbound"
+          destination = "0.0.0.0/0"
+          source      = "0.0.0.0/0"
+        }
+      ]
+    }
+  ]
+}
+
+##############################################################################
+
+##############################################################################
 # Key Management Variables
 ##############################################################################
 
