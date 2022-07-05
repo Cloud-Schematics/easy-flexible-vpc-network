@@ -214,7 +214,7 @@ variable "get_detailed_acl_rules_from_json" {
 }
 
 variable "detailed_acl_rules" {
-  description = "List describing network ACLs and rules to add."
+  description = "OPTIONAL - List describing network ACLs and rules to add."
   type = list(
     object({
       acl_shortname = string
